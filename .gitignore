@@ -53,11 +53,7 @@ lens_inspections.db
 *~
 .DS_Store
 
-# Model files (large files that shouldn't be in version control)
-*.pt
-*.pth
-*.onnx
-*.h5
+# Large model files (except project-essential models - those are tracked separately)
 
 # OS
 Thumbs.db

@@ -1,0 +1,25 @@
+# Build outputs
+frontend/dist
+frontend/node_modules
+backend/__pycache__
+backend/**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.ipynb_checkpoints
+
+# Databases & local logs
+backend/lens_inspections.db
+backend/report.pdf
+*.log
+
+# Git & IDEs
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+
+# Misc
+README.md
+render.yaml

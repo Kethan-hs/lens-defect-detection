@@ -1,0 +1,45 @@
+# ── Build stage ───────────────────────────────────────────────────────────────
+FROM python:3.11-slim AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 libglib2.0-0 gcc g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+COPY backend/requirements.txt .
+
+# Install CPU-only torch first (large layer, cached separately)
+RUN pip install --no-cache-dir --user torch torchvision
+
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# Pre-download YOLOv8n-seg weights so runtime startup is instant
+# lens_seg.pt (custom trained) is copied from backend/models at COPY time
+# Skipping pre-download to avoid build issues; model will download on first use
+
+# ── Runtime stage ─────────────────────────────────────────────────────────────
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy installed packages from builder
+COPY --from=builder /root/.local /root/.local
+ENV PATH=/root/.local/bin:$PATH
+
+# Copy backend source and models
+COPY backend/ .
+
+# Copy pre-downloaded generic seg model from builder
+# (Removed - model downloads at runtime)
+# Note: backend/models/lens_seg.pt (custom trained) is already in backend/models/
+# so it's covered by the COPY backend/ . above
+
+RUN mkdir -p /app/data
+
+# Railway injects PORT; default 8000 for local/docker-compose
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]

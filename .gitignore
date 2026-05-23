@@ -1,13 +1,12 @@
 # Python
-.venv/
-venv/
-env/
-ENV/
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+env/
+venv/
+ENV/
 build/
 develop-eggs/
 dist/
@@ -20,30 +19,14 @@ parts/
 sdist/
 var/
 wheels/
-pip-wheel-metadata/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
-# Node
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-package-lock.json
-
-# Environment variables
-.env
-.env.local
-.env.*.local
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-lens_inspections.db
+# Backend local database (SQLite)
+backend/lens_inspections.db
+backend/lens_inspections.db-shm
+backend/lens_inspections.db-wal
 
 # IDE
 .vscode/
@@ -53,11 +36,18 @@ lens_inspections.db
 *~
 .DS_Store
 
-# Large model files (except project-essential models - those are tracked separately)
+# Environment
+.env
+.env.local
+.env.*.local
 
 # OS
-Thumbs.db
 .DS_Store
+Thumbs.db
 
-# Misc
-.dockerignore
+# Pytest
+.pytest_cache/
+.coverage
+
+# Note: backend/models/*.pt files ARE committed to git
+# They should be included in the repository for Render deployment

@@ -5,6 +5,8 @@ services:
     plan: free
     dockerfilePath: ./docker/Dockerfile.backend
     dockerContext: .
+    branch: main
+    autoDeployTrigger: commit
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
@@ -17,9 +19,7 @@ services:
         value: "8000"
       - key: PYTHON_UNBUFFERED
         value: "1"
-    dependsOn:
-      - lens-detection-db
-
+    
 databases:
   - name: lens-detection-db
     databaseName: lens_inspections
@@ -27,6 +27,3 @@ databases:
     plan: basic-256mb
     region: oregon
 
-deploy:
-  trigger: github
-  branch: main

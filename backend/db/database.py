@@ -1,23 +1,53 @@
 """
 Database setup.
-Supports both SQLite (local dev) and PostgreSQL (Railway production).
+Supports both SQLite (local dev) and PostgreSQL.
 """
+import logging
 import os
+
 from sqlalchemy import create_engine, event
+from sqlalchemy.exc import ArgumentError
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./lens_inspections.db")
+logger = logging.getLogger(__name__)
 
-# Railway sometimes gives postgres:// URLs — SQLAlchemy needs postgresql://
+DATABASE_ENV_NAMES = [
+    "DATABASE_URL",
+    "RENDER_DATABASE_URL",
+    "POSTGRES_URL",
+    "DATABASE_URI",
+    "SQLALCHEMY_DATABASE_URL",
+]
+
+
+def get_database_url():
+    for name in DATABASE_ENV_NAMES:
+        value = os.getenv(name)
+        if value and value.strip():
+            return value.strip(), name
+    return "sqlite:///./lens_inspections.db", "sqlite_default"
+
+DATABASE_URL, DATABASE_SOURCE = get_database_url()
+
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-IS_SQLITE    = DATABASE_URL.startswith("sqlite")
+if DATABASE_SOURCE == "sqlite_default":
+    logger.warning("Using local SQLite fallback because no database environment variable was set.")
+
+IS_SQLITE = DATABASE_URL.startswith("sqlite")
 connect_args = {"check_same_thread": False} if IS_SQLITE else {}
 
-engine       = create_engine(DATABASE_URL, connect_args=connect_args)
+try:
+    engine = create_engine(DATABASE_URL, connect_args=connect_args)
+except ArgumentError as exc:
+    raise RuntimeError(
+        f"Invalid database URL from {DATABASE_SOURCE}: {DATABASE_URL!r}. "
+        "Set a valid DATABASE_URL or RENDER_DATABASE_URL in Render."
+    ) from exc
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base         = declarative_base()
+Base = declarative_base()
 
 
 # Enable WAL mode for SQLite to prevent lock contention under concurrent writes
